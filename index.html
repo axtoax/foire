@@ -71,11 +71,17 @@
     out.textContent = "Envoi...\n" + JSON.stringify(payload, null, 2);
 
     try {
-      const r = await fetch(N8N_CREATE_ORDER_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+     const form = new URLSearchParams();
+form.append("customer_firstname", (firstname.value || "").trim());
+form.append("duration_minutes", String(Number(duration.value)));
+form.append("karafun_device_id", String(KARAFUN_DEVICE_ID));
+
+const r = await fetch(N8N_CREATE_ORDER_URL, {
+  method: "POST",
+  headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+  body: form.toString(),
+});
+
 
       const text = await r.text();
       out.textContent = `HTTP ${r.status}\n\n${text}`;
