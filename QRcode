@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Karaoke – Démarrer une session</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 16px; }
+    .card { border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px; }
+    label { display:block; margin-top: 12px; font-weight: 600; }
+    input, select, button { width: 100%; padding: 12px; margin-top: 6px; border-radius: 10px; border: 1px solid #d1d5db; font-size: 16px; }
+    button { cursor: pointer; border: none; }
+    .row { margin-top: 14px; display:flex; gap: 10px; }
+    .row button { flex: 1; }
+    .ok { background: #16a34a; color: white; }
+    .muted { color:#6b7280; font-size: 13px; margin-top: 8px; }
+    pre { background:#0b1020; color:#dbeafe; padding: 12px; border-radius: 12px; overflow:auto; }
+  </style>
+</head>
+<body>
+  <h1>Démarrer une session Karaoké</h1>
+
+  <div class="card">
+    <label for="firstname">Ton prénom</label>
+    <input id="firstname" placeholder="Ex: Thomas" maxlength="40" />
+
+    <label for="duration">Durée</label>
+    <select id="duration">
+      <option value="5">5 minutes</option>
+      <option value="10" selected>10 minutes</option>
+      <option value="15">15 minutes</option>
+    </select>
+
+    <div class="row">
+      <button class="ok" id="start">Continuer</button>
+      <button id="reset" type="button">Reset</button>
+    </div>
+
+    <div class="muted">
+      Après “Continuer”, tu verras un <b>order_id</b>. Ensuite tu l’utilises dans ton <code>curl</code> SumUp pour simuler le paiement.
+    </div>
+  </div>
+
+  <h3>Résultat</h3>
+  <pre id="out">-</pre>
+
+<script>
+  // 🔴 Mets ici l’URL PROD du webhook workflow 1 (pas webhook-test)
+  const N8N_CREATE_ORDER_URL = "https://axelmelillo.app.n8n.cloud/webhook/kiosk/start";
+
+  // 🔴 Mets ici ton device id KaraFun (le vrai que tu as récupéré)
+  const KARAFUN_DEVICE_ID = 5361;
+
+  const out = document.getElementById("out");
+  const firstname = document.getElementById("firstname");
+  const duration = document.getElementById("duration");
+
+  document.getElementById("reset").onclick = () => {
+    firstname.value = "";
+    duration.value = "10";
+    out.textContent = "-";
+  };
+
+  document.getElementById("start").onclick = async () => {
+    const payload = {
+      customer_firstname: (firstname.value || "").trim(),
+      duration_minutes: Number(duration.value),
+      karafun_device_id: KARAFUN_DEVICE_ID
+    };
+
+    out.textContent = "Envoi...\n" + JSON.stringify(payload, null, 2);
+
+    try {
+      const r = await fetch(N8N_CREATE_ORDER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const text = await r.text();
+      out.textContent = `HTTP ${r.status}\n\n${text}`;
+
+    } catch (e) {
+      out.textContent =
+        "Erreur navigateur (souvent CORS) :\n\n" +
+        String(e) +
+        "\n\nSi tu vois CORS, on active la réponse CORS dans n8n ou on passe par une page hébergée sur n8n.";
+    }
+  };
+</script>
+</body>
+</html>
