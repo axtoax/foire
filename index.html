@@ -48,35 +48,48 @@
 <script>
   // 🔴 Mets ici l’URL PROD du webhook workflow 1 (pas webhook-test)
   const N8N_CREATE_ORDER_URL = "https://axelmelillo.app.n8n.cloud/webhook/kiosk/start";
-
   // 🔴 Mets ici ton device id KaraFun (le vrai que tu as récupéré)
   const KARAFUN_DEVICE_ID = 5361;
-
   const out = document.getElementById("out");
   const firstname = document.getElementById("firstname");
   const duration = document.getElementById("duration");
 
 
-  async function loadNextSlot() {
+ async function loadNextSlot() {
+  const slotEl = document.getElementById("slot");
+
   try {
     const params = new URLSearchParams({
-      device_id: KARAFUN_DEVICE_ID,
-      duration_minutes: duration.value,
+      device_id: String(KARAFUN_DEVICE_ID),
+      duration_minutes: String(duration.value),
     });
 
-    const r = await fetch(
-      "https://axelmelillo.app.n8n.cloud/webhook/kiosk/next-slot?" + params.toString()
-    );
+    const url = "https://axelmelillo.app.n8n.cloud/webhook/kiosk/next-slot?" + params.toString();
+    slotEl.textContent = "Vérification… (" + url + ")";
 
-    const data = await r.json();
-    document.getElementById("slot").textContent =
-      "Prochaine session disponible à " + data.next_available_at;
+    const r = await fetch(url, { method: "GET" });
+
+    const raw = await r.text(); // on lit d’abord en texte pour debug
+
+    if (!r.ok) {
+      throw new Error(`HTTP ${r.status} - ${raw}`);
+    }
+
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+      throw new Error("Réponse non-JSON: " + raw.slice(0, 200));
+    }
+
+    slotEl.textContent = "Prochaine session disponible à " + (data.next_available_at ?? "??");
 
   } catch (e) {
-    document.getElementById("slot").textContent =
-      "Impossible de vérifier la disponibilité";
+    console.error("loadNextSlot error:", e);
+    slotEl.textContent = "Impossible de vérifier (" + String(e) + ")";
   }
 }
+
 
 
 loadNextSlot();
