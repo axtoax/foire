@@ -59,7 +59,34 @@
     duration.value = "10";
     out.textContent = "-";
   };
+  
+<p id="slot" class="muted">Vérification de la disponibilité…</p>
 
+  async function loadNextSlot() {
+  try {
+    const params = new URLSearchParams({
+      device_id: KARAFUN_DEVICE_ID,
+      duration_minutes: duration.value,
+    });
+
+    const r = await fetch(
+      "https://axelmelillo.app.n8n.cloud/webhook/kiosk/next-slot?" + params.toString()
+    );
+
+    const data = await r.json();
+    document.getElementById("slot").textContent =
+      "Prochaine session disponible à " + data.next_available_at;
+
+  } catch (e) {
+    document.getElementById("slot").textContent =
+      "Impossible de vérifier la disponibilité";
+  }
+}
+
+loadNextSlot();
+duration.onchange = loadNextSlot;
+
+  
   document.getElementById("start").onclick = async () => {
     const payload = {
       customer_firstname: (firstname.value || "").trim(),
