@@ -31,6 +31,8 @@
       <option value="15">15 minutes</option>
     </select>
 
+    <p id="slot" class="muted">Vérification de la disponibilité…</p>
+
     <div class="row">
       <button class="ok" id="start">Continuer</button>
       <button id="reset" type="button">Reset</button>
@@ -54,13 +56,6 @@
   const firstname = document.getElementById("firstname");
   const duration = document.getElementById("duration");
 
-  document.getElementById("reset").onclick = () => {
-    firstname.value = "";
-    duration.value = "10";
-    out.textContent = "-";
-  };
-  
-<p id="slot" class="muted">Vérification de la disponibilité…</p>
 
   async function loadNextSlot() {
   try {
@@ -83,8 +78,17 @@
   }
 }
 
+
 loadNextSlot();
 duration.onchange = loadNextSlot;
+
+  
+  document.getElementById("reset").onclick = () => {
+    firstname.value = "";
+    duration.value = "10";
+    out.textContent = "-";
+  };
+  
 
   
   document.getElementById("start").onclick = async () => {
